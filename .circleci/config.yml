@@ -36,6 +36,12 @@ jobs:
           key: v2-npm-{{ checksum "package-lock.json" }}
           paths:
             - node_modules
+      - run:
+          name: Setup Code Climate test-reporter
+          command: |
+            # download test reporter as a static binary
+              curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
+              chmod +x ./cc-test-reporter
       - *persist-step
 
   prettier:
@@ -66,6 +72,12 @@ jobs:
       - run:
           name: Test
           command: npm run test-node
+      - run:
+          name: Upload coverage report
+          command: |
+            # bash <(curl -s https://codecov.io/bash) -F unit -s coverage/lcov.info
+            ./cc-test-reporter format-coverage -t lcov -o coverage/codeclimate.node-10.json coverage/lcov.info
+            ./cc-test-reporter upload-coverage -i coverage/codeclimate.node-10.json
 
   node-12:
     docker:
@@ -85,6 +97,18 @@ jobs:
           name: Test
           command: npm run test-node
 
+  upload-coverage:
+    docker:
+      - image: circleci/node:10
+    steps:
+      - *attach-step
+      - run:
+          name: Upload coverage report
+          command: |
+            # bash <(curl -s https://codecov.io/bash) -F unit -s coverage/lcov.info
+            ./cc-test-reporter format-coverage -t lcov -o coverage/codeclimate.node-10.json coverage/lcov.info
+            ./cc-test-reporter upload-coverage -i coverage/codeclimate.node-10.json
+
   integration-tests:
     docker:
       - image: circleci/node:10.15.1-browsers
@@ -103,9 +127,9 @@ jobs:
             if [ -z "$CIRCLE_PULL_REQUESTS" ]; then
               npm run test-cloud
             fi
-      - run:
-          name: Upload coverage report
-          command: bash <(curl -s https://codecov.io/bash) -F unit -s coverage/lcov.info
+      # - run:
+      #     name: Upload coverage report
+      #     command: bash <(curl -s https://codecov.io/bash) -F unit -s coverage/lcov.info
 
   saucelabs:
     docker:
@@ -136,13 +160,20 @@ workflows:
       - node-14:
           requires:
             - install-dependencies
-      - integration-tests:
-          requires:
-            - install-dependencies
-            - lint
-            - node-10
-            - node-12
-            - node-14
+      # - upload-coverage:
+      #     requires:
+      #       - install-dependencies
+      #       - lint
+      #       - node-10
+      #       - node-12
+      #       - node-14
+      # - integration-tests:
+      #     requires:
+      #       - install-dependencies
+      #       - lint
+      #       - node-10
+      #       - node-12
+      #       - node-14
       # - saucelabs:
       #     context: SAUCE_LABS
       #     requires:

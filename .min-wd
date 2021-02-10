@@ -1,5 +1,5 @@
 {
-  "sauceLabs": true,
+  "sauceLabs": false,
   "browsers": [{
     "name": "chrome"
   }, {
