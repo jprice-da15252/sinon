@@ -143,10 +143,10 @@ workflows:
             - node-10
             - node-12
             - node-14
-      - saucelabs:
-          context: SAUCE_LABS
-          requires:
-            - integration-tests
-          filters:
-            branches:
-              only: master
+      # - saucelabs:
+      #     context: SAUCE_LABS
+      #     requires:
+      #       - integration-tests
+      #     filters:
+      #       branches:
+      #         only: master
