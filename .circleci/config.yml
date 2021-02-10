@@ -72,6 +72,12 @@ jobs:
       - run:
           name: Test
           command: npm run test-node
+      - run:
+          name: Upload coverage report
+          command: |
+            # bash <(curl -s https://codecov.io/bash) -F unit -s coverage/lcov.info
+            ./cc-test-reporter format-coverage -t lcov -o coverage/codeclimate.node-10.json coverage/lcov.info
+            ./cc-test-reporter upload-coverage -i coverage/codeclimate.node-10.json
 
   node-12:
     docker:
@@ -81,12 +87,6 @@ jobs:
       - run:
           name: Test
           command: npm run test-node
-      - run:
-          name: Upload coverage report
-          command: |
-            # bash <(curl -s https://codecov.io/bash) -F unit -s coverage/lcov.info
-            ./cc-test-reporter format-coverage -t lcov -o coverage/codeclimate.node-10.json coverage/lcov.info
-            ./cc-test-reporter upload-coverage -i coverage/codeclimate.node-10.json
 
   node-14:
     docker:

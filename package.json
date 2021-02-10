@@ -57,7 +57,7 @@
     "postversion": "./scripts/postversion.sh"
   },
   "nyc": {
-    "instrument": false,
+    "instrument": true,
     "temp-dir": "coverage/.nyc_output",
     "reporter": [
       "text",
