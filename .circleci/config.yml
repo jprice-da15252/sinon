@@ -36,6 +36,12 @@ jobs:
           key: v2-npm-{{ checksum "package-lock.json" }}
           paths:
             - node_modules
+      - run:
+          name: Setup Code Climate test-reporter
+          command: |
+            # download test reporter as a static binary
+              curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
+              chmod +x ./cc-test-reporter
       - *persist-step
 
   prettier:
@@ -103,9 +109,15 @@ jobs:
             if [ -z "$CIRCLE_PULL_REQUESTS" ]; then
               npm run test-cloud
             fi
+      # - run:
+      #     name: Upload coverage report
+      #     command: bash <(curl -s https://codecov.io/bash) -F unit -s coverage/lcov.info
       - run:
           name: Upload coverage report
-          command: bash <(curl -s https://codecov.io/bash) -F unit -s coverage/lcov.info
+          command: |
+            # bash <(curl -s https://codecov.io/bash) -F unit -s coverage/lcov.info
+            ./cc-test-reporter format-coverage -t lcov -o tmp/codeclimate.integration.json coverage/lcov.info
+            ./cc-test-reporter upload-coverage -i tmp/codeclimate.integration.json
 
   saucelabs:
     docker:
