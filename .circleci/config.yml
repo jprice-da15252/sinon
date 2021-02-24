@@ -1,5 +1,8 @@
 version: 2.1
 
+orbs:
+  coveralls: coveralls/coveralls@1.0.6
+
 references:
   x-workdir: &work-dir
     working_directory: ~/source
@@ -78,6 +81,8 @@ jobs:
             # bash <(curl -s https://codecov.io/bash) -F unit -s coverage/lcov.info
             ./cc-test-reporter format-coverage -t lcov -o coverage/codeclimate.node-10.json coverage/lcov.info
             ./cc-test-reporter upload-coverage -i coverage/codeclimate.node-10.json
+      - coveralls/upload
+      
 
   node-12:
     docker:
