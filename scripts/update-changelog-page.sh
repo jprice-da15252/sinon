@@ -4,6 +4,7 @@ layout: default
 title: Changelog
 permalink: /releases/changelog
 ---
+
 # Changelog
-$(<CHANGELOG.md)
+$(tail -n+2 CHANGES.md)
 EOL

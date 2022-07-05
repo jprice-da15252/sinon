@@ -329,6 +329,36 @@ describe("spy", function () {
         assert(spy.get.calledOnce);
     });
 
+    it("sets wrappedMethod on getter and setter", function () {
+        var object = {
+            get test() {
+                return this.property;
+            },
+            set test(value) {
+                this.property = value;
+            },
+        };
+
+        var descriptor1 = Object.getOwnPropertyDescriptor(object, "test");
+        var spy = createSpy(object, "test", ["get", "set"]);
+        var descriptor2 = Object.getOwnPropertyDescriptor(object, "test");
+
+        refute.equals(descriptor1, descriptor2);
+
+        refute.isUndefined(spy.get.wrappedMethod);
+        refute.isUndefined(spy.get.restore);
+        refute.isUndefined(spy.set.wrappedMethod);
+        refute.isUndefined(spy.set.restore);
+        assert.isUndefined(spy.wrappedMethod);
+        assert.isUndefined(spy.restore);
+
+        spy.get.restore();
+        spy.set.restore();
+
+        var descriptor3 = Object.getOwnPropertyDescriptor(object, "test");
+        assert.equals(descriptor1, descriptor3);
+    });
+
     describe("global.Error", function () {
         beforeEach(function () {
             this.originalError = globalContext.Error;
@@ -2405,7 +2435,7 @@ describe("spy", function () {
             var i = 0;
             var callback = createSpy(function () {
                 i++;
-                return "useful value " + i;
+                return `useful value ${i}`;
             });
             spy(1, 2, callback);
             spy(3, 4, callback);
@@ -2517,7 +2547,7 @@ describe("spy", function () {
             var i = 0;
             var callback = createSpy(function () {
                 i++;
-                return "useful value " + i;
+                return `useful value ${i}`;
             });
             var thisObj = { name1: "value1", name2: "value2" };
             spy(1, 2, callback);
@@ -2613,7 +2643,7 @@ describe("spy", function () {
             var i = 0;
             var callback = createSpy(function () {
                 i++;
-                return "useful value " + i;
+                return `useful value ${i}`;
             });
             spy(1, 2, callback);
             spy(3, 4, callback);
@@ -2706,7 +2736,7 @@ describe("spy", function () {
             var i = 0;
             var callback = createSpy(function () {
                 i++;
-                return "useful value " + i;
+                return `useful value ${i}`;
             });
             var thisObj = { name1: "value1", name2: "value2" };
             spy(1, 2, callback);
@@ -2779,11 +2809,11 @@ describe("spy", function () {
 
             assert.exception(
                 function () {
-                    spy.yieldTo(Symbol());
+                    spy.yieldTo(Symbol("apple pie"));
                 },
                 {
                     message:
-                        "spy cannot yield to 'Symbol()' since it was not yet invoked.",
+                        "spy cannot yield to 'Symbol(apple pie)' since it was not yet invoked.",
                 }
             );
         });
@@ -2805,7 +2835,7 @@ describe("spy", function () {
             var i = 0;
             var callback = createSpy(function () {
                 i++;
-                return "useful value " + i;
+                return `useful value ${i}`;
             });
             spy(1, 2, { success: callback });
             spy(3, 4, { success: callback });
@@ -2882,11 +2912,11 @@ describe("spy", function () {
 
             assert.exception(
                 function () {
-                    spy.yieldToOn(Symbol(), thisObj);
+                    spy.yieldToOn(Symbol("apple pie"), thisObj);
                 },
                 {
                     message:
-                        "spy cannot yield to 'Symbol()' since it was not yet invoked.",
+                        "spy cannot yield to 'Symbol(apple pie)' since it was not yet invoked.",
                 }
             );
         });
@@ -2910,7 +2940,7 @@ describe("spy", function () {
             var i = 0;
             var callback = createSpy(function () {
                 i++;
-                return "useful value " + i;
+                return `useful value ${i}`;
             });
             var thisObj = { name1: "value1", name2: "value2" };
             spy(1, 2, { success: callback });

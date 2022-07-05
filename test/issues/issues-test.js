@@ -78,7 +78,7 @@ describe("issues", function () {
         });
     });
 
-    describe("#852 - createStubInstance on intherited constructors", function () {
+    describe("#852 - createStubInstance on inherited constructors", function () {
         it("must not throw error", function () {
             var A = function () {
                 return;
@@ -277,7 +277,7 @@ describe("issues", function () {
                 resolve: function (value) {
                     var promise = Promise.resolve(value);
                     promise.tap = function () {
-                        return "tap " + value;
+                        return `tap ${value}`;
                     };
 
                     return promise;
@@ -318,7 +318,7 @@ describe("issues", function () {
                 ); //backup val
                 Object.defineProperty(window, "innerHeight", {
                     value: 10,
-                    configureable: true,
+                    configurable: true,
                     writeable: true,
                 });
                 Object.defineProperty(window, "innerHeight", preDescriptor); //restore
@@ -341,7 +341,9 @@ describe("issues", function () {
         });
 
         afterEach(function () {
-            sandbox.restore();
+            if (sandbox) {
+                sandbox.restore();
+            }
         });
 
         it("stub window innerHeight", function () {
@@ -607,7 +609,8 @@ describe("issues", function () {
             }
 
             ClassWithoutProps.prototype.constructor = ClassWithoutProps;
-            AnotherClassWithoutProps.prototype.constructor = AnotherClassWithoutProps;
+            AnotherClassWithoutProps.prototype.constructor =
+                AnotherClassWithoutProps;
             var arg1 = new ClassWithoutProps(); //arg1.constructor.name === ClassWithoutProps
             var arg2 = new AnotherClassWithoutProps(); //arg2.constructor.name === Object
             var stub = sinon.stub();

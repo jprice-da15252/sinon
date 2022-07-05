@@ -15,13 +15,3 @@ npm run lint
 npm test
 npm run test-cloud
 npm run test-runnable-examples
-
-echo 'Updating CHANGELOG.md'
-git changelog --no-merges
-git add CHANGELOG.md
-
-echo 'Updating AUTHORS'
-git authors --list > AUTHORS
-git add AUTHORS
-
-git commit -m "Update CHANGELOG.md and AUTHORS for new release"
