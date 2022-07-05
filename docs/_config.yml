@@ -5,7 +5,8 @@ description: >-
 url: 'https://sinonjs.org'
 github_username: sinonjs
 sinon:
-  current_release: v9.2.4
+  current_release: v14.0.0
+  current_major_version: 14
 markdown: kramdown
 kramdown:
   input: GFM

@@ -18,11 +18,14 @@ redirect_from:
 
 <div class="in-content releases">
     <ul>
-        {% assign sorted_releases = site.releases | sort | reverse %} {% for
-        release in sorted_releases %} {% assign url_parts = release.url | split:
-        "/" %} {% comment %} Weird as hell, but .size == 3 means there are 2
-        elements ... {% endcomment %} {% if url_parts.size == 3 and url_parts[2]
-        != "latest" %}
+        {% assign sorted_releases = site.releases | sort: "sort_id" | reverse %}
+        {% for release in sorted_releases %}
+            {% assign url_parts = release.url | split: "/" %}
+
+            {% comment %} Weird as hell, but .size == 3 means there are 2 elements ...
+            {% endcomment %}
+
+            {% if url_parts.size == 3 and url_parts[2] != "latest" %}
         <li>
             <p>
                 <span class="ver">{{ release.release_id }}</span>
@@ -40,7 +43,8 @@ redirect_from:
                 </span>
             </p>
         </li>
-        {% endif %} {% endfor %}
+            {% endif %}
+        {% endfor %}
     </ul>
 </div>
 
@@ -54,10 +58,14 @@ redirect_from:
         <a href="https://cdnjs.com">cdnjs</a>.
     </p>
     <p>
-        Their adressing schemes vary, but an example url such as
+        Their addressing schemes vary, but an example url such as
         <a href="https://cdn.jsdelivr.net/npm/sinon@3/pkg/sinon.js"
             >https://cdn.jsdelivr.net/npm/sinon@3/pkg/sinon.js</a
         >
         would download the latest browser bundle of Sinon 3.
     </p>
 </div>
+
+{% comment %}
+vim: ft=liquid
+{%endcomment %}

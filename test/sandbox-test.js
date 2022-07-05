@@ -14,7 +14,7 @@ var createSandbox = require("../lib/sinon/create-sandbox");
 var sinonFake = require("../lib/sinon/fake");
 var sinonSpy = require("../lib/sinon/spy");
 var sinonStub = require("../lib/sinon/stub");
-var sinonConfig = require("../lib/sinon/util/core/get-config");
+var sinonConfig = require("./get-config");
 var sinonClock = require("../lib/sinon/util/fake-timers");
 
 var supportsAjax =
@@ -133,6 +133,51 @@ describe("Sandbox", function () {
             );
 
             assert.equals(fakes.length, 2);
+        });
+
+        describe("warns of potential leak when", function () {
+            var warn;
+
+            beforeEach(function () {
+                warn = this.sandbox.stub(deprecated, "printWarning");
+            });
+
+            afterEach(function () {
+                warn.restore();
+            });
+
+            it("many fakes are created", function () {
+                assert.equals(typeof this.sandbox.leakThreshold, "number");
+
+                createTooManyFakes(this.sandbox);
+
+                assert(warn.called);
+            });
+
+            it("a configurable number of fakes are created", function () {
+                this.sandbox.leakThreshold = 20;
+
+                createTooManyFakes(this.sandbox);
+
+                assert(warn.called);
+            });
+
+            it("a leak warning has not already been output", function () {
+                this.sandbox.leakThreshold = 20;
+
+                createTooManyFakes(this.sandbox);
+                this.sandbox.restore();
+                warn.resetHistory();
+
+                createTooManyFakes(this.sandbox);
+                assert(!warn.called);
+            });
+
+            function createTooManyFakes(sandbox) {
+                for (var i = 0; i < sandbox.leakThreshold; i++) {
+                    sandbox.spy();
+                }
+            }
         });
     });
 
@@ -275,7 +320,7 @@ describe("Sandbox", function () {
 
             for (var i = 0; i < types.length; i++) {
                 // yes, it's silly to create functions in a loop, it's also a test
-                /* eslint-disable-next-line ie11/no-loop-func, no-loop-func */
+                /* eslint-disable-next-line no-loop-func */
                 assert.exception(function () {
                     this.sandbox.createStubInstance(types[i]);
                 });
@@ -372,10 +417,11 @@ describe("Sandbox", function () {
 
                 assert.exception(
                     function () {
-                        sandbox.stub(null, Symbol());
+                        sandbox.stub(null, Symbol("apple pie"));
                     },
                     {
-                        message: "Trying to stub property 'Symbol()' of null",
+                        message:
+                            "Trying to stub property 'Symbol(apple pie)' of null",
                     }
                 );
             }
@@ -558,9 +604,12 @@ describe("Sandbox", function () {
 
                 assert.exception(
                     function () {
-                        sandbox.stub(object, Symbol());
+                        sandbox.stub(object, Symbol("apple pie"));
                     },
-                    { message: "Cannot stub non-existent property Symbol()" },
+                    {
+                        message:
+                            "Cannot stub non-existent property Symbol(apple pie)",
+                    },
                     TypeError
                 );
 
@@ -1138,7 +1187,7 @@ describe("Sandbox", function () {
             };
 
             this.sandbox.replaceSetter(object, "foo", function (val) {
-                this.prop = val + "bla";
+                this.prop = `${val}bla`;
             });
 
             object.foo = "bla";
@@ -1155,7 +1204,7 @@ describe("Sandbox", function () {
                 prop: "bar",
             };
             var replacement = function (val) {
-                this.prop = val + "bla";
+                this.prop = `${val}bla`;
             };
             var actual = this.sandbox.replaceSetter(object, "foo", replacement);
 
@@ -1171,7 +1220,7 @@ describe("Sandbox", function () {
                 prop: "bar",
             });
             var replacement = function (value) {
-                this.prop = value + "blabla";
+                this.prop = `${value}blabla`;
             };
 
             this.sandbox.replaceSetter(object, "foo", replacement);
@@ -1250,7 +1299,7 @@ describe("Sandbox", function () {
             };
 
             this.sandbox.replaceSetter(object, "foo", function (val) {
-                this.prop = val + "bla";
+                this.prop = `${val}bla`;
             });
 
             this.sandbox.restore();
@@ -1452,7 +1501,7 @@ describe("Sandbox", function () {
             assert.same(setTimeout, originalSetTimeout, "fakeTimers restored");
         });
 
-        it("restores spied fake timers when then sanddox is restored", function () {
+        it("restores spied fake timers when the sandbox is restored", function () {
             var originalSetTimeout = setTimeout;
 
             this.sandbox.useFakeTimers();
@@ -2125,7 +2174,7 @@ describe("Sandbox", function () {
 
             var sandbox = new Sandbox();
             sandbox.stub(object, "foo").set(function (val) {
-                object.prop = val + "bla";
+                object.prop = `${val}bla`;
             });
 
             object.foo = "bla";
@@ -2140,7 +2189,7 @@ describe("Sandbox", function () {
 
             var sandbox = new Sandbox();
             sandbox.stub(object, "prop").set(function setterFn(val) {
-                object.prop = val + "bla";
+                object.prop = `${val}bla`;
             });
 
             sandbox.restore();

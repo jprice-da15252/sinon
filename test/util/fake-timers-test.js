@@ -10,6 +10,26 @@ var refute = referee.refute;
 var GlobalDate = Date;
 var setImmediatePresent = typeof setImmediate === "function";
 
+// `setTimeout` supports a string as the first argument, which we currently
+// support for historical reasons
+//
+// This is not supported in node, and `@sinonjs/fake-timers` will throw an
+// error, when passed a string as the first argument in node
+//
+// See https://developer.mozilla.org/en-US/docs/Web/API/WindowOrWorkerGlobalScope/setTimeout
+function supportsCodeInSettimeout() {
+    try {
+        // eslint-disable-next-line no-implied-eval
+        var id = setTimeout("console.log('hello');", 100);
+        clearTimeout(id);
+        return true;
+    } catch (error) {
+        return false;
+    }
+}
+
+var usesEvalInSettimeout = supportsCodeInSettimeout();
+
 describe("fakeTimers.clock", function () {
     beforeEach(function () {
         this.global = typeof global !== "undefined" ? global : window;
@@ -33,19 +53,19 @@ describe("fakeTimers.clock", function () {
             });
         });
 
-        it("returns numeric id or object with numeric id", function () {
-            var result = this.clock.setTimeout("");
+        it("returns a timer id whose primitive representation is a number", function () {
+            // eslint-disable-next-line no-empty-function
+            var noop = function () {};
+            var result = this.clock.setTimeout(noop);
 
-            if (typeof result === "object") {
-                assert.isNumber(result.id);
-            } else {
-                assert.isNumber(result);
-            }
+            assert.isNumber(Number(result));
         });
 
         it("returns unique id", function () {
-            var id1 = this.clock.setTimeout("");
-            var id2 = this.clock.setTimeout("");
+            // eslint-disable-next-line no-empty-function
+            var noop = function () {};
+            var id1 = this.clock.setTimeout(noop);
+            var id2 = this.clock.setTimeout(noop);
 
             refute.equals(id2, id1);
         });
@@ -63,15 +83,21 @@ describe("fakeTimers.clock", function () {
             assert(stubs[1].called);
         });
 
-        it("evals non-function callbacks", function () {
-            var evalCalledString =
-                (typeof global !== "undefined" ? "global" : "window") +
-                ".sinonClockEvalCalled = true";
-            this.clock.setTimeout(evalCalledString, 10);
-            this.clock.tick(10);
+        if (!usesEvalInSettimeout) {
+            it("throws on non-function callbacks", function () {
+                var string = "apple pie";
 
-            assert(this.global.sinonClockEvalCalled);
-        });
+                assert.exception(
+                    function () {
+                        this.clock.setTimeout(string, 10);
+                    }.bind(this),
+                    {
+                        message:
+                            "[ERR_INVALID_CALLBACK]: Callback must be a function. Received apple pie of type string",
+                    }
+                );
+            });
+        }
 
         it("passes setTimeout parameters", function () {
             var clock = fakeTimers.clock.create();
@@ -105,16 +131,12 @@ describe("fakeTimers.clock", function () {
         });
 
         if (typeof setImmediate === "function") {
-            it("returns numeric id or object with numeric id", function () {
+            it("returns a timer whose primitive representation is a number", function () {
                 var result = this.clock.setImmediate(function () {
                     return;
                 });
 
-                if (typeof result === "object") {
-                    assert.isNumber(result.id);
-                } else {
-                    assert.isNumber(result);
-                }
+                assert.isNumber(Number(result));
             });
 
             it("calls the given callback immediately", function () {
@@ -156,7 +178,7 @@ describe("fakeTimers.clock", function () {
                 assert(stub.calledWithExactly("value1", 2));
             });
         } else {
-            it("shouldn't install setImmedate", function () {
+            it("shouldn't install setImmediate", function () {
                 refute.isFunction(this.clock.setImmediate);
             });
         }
@@ -178,7 +200,7 @@ describe("fakeTimers.clock", function () {
                 assert.isFalse(callback.called);
             });
         } else {
-            it("shouldn't install clearImmedate", function () {
+            it("shouldn't install clearImmediate", function () {
                 refute.isFunction(this.clock.clearImmediate);
             });
         }
@@ -572,19 +594,19 @@ describe("fakeTimers.clock", function () {
             });
         });
 
-        it("returns numeric id or object with numeric id", function () {
-            var result = this.clock.setInterval("");
+        it("returns a timer whose primitive representation is a number", function () {
+            // eslint-disable-next-line no-empty-function
+            var noop = function () {};
+            var result = this.clock.setInterval(noop);
 
-            if (typeof result === "object") {
-                assert.isNumber(result.id);
-            } else {
-                assert.isNumber(result);
-            }
+            assert.isNumber(Number(result));
         });
 
         it("returns unique id", function () {
-            var id1 = this.clock.setInterval("");
-            var id2 = this.clock.setInterval("");
+            // eslint-disable-next-line no-empty-function
+            var noop = function () {};
+            var id1 = this.clock.setInterval(noop);
+            var id2 = this.clock.setInterval(noop);
 
             refute.equals(id2, id1);
         });
@@ -877,23 +899,12 @@ describe("fakeTimers.clock", function () {
             assert(stub.called);
         });
 
-        it("global fake setTimeout should return id", function () {
+        it("returns a timer whose primitive representation is a number", function () {
             this.clock = fakeTimers.useFakeTimers();
-            var stub = sinonStub();
+            const stub = sinonStub();
+            const to = setTimeout(stub, 1000);
 
-            var to = setTimeout(stub, 1000);
-
-            if (
-                typeof setTimeout(function () {
-                    return;
-                }, 0) === "object"
-            ) {
-                assert.isNumber(to.id);
-                assert.isFunction(to.ref);
-                assert.isFunction(to.unref);
-            } else {
-                assert.isNumber(to);
-            }
+            assert.isNumber(Number(to));
         });
 
         it("replaces global clearTimeout", function () {
